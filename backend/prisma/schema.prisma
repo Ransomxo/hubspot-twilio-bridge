@@ -1,0 +1,29 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Account {
+  id                String   @id @default(uuid())
+  hubspotPortalId  String
+  twilioAccountSid String?
+  twilioAuthToken  String?
+  twilioNumber     String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  SmsBilling      SmsBilling[]
+}
+
+model SmsBilling {
+  id        String   @id @default(uuid())
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id])
+  messageId String
+  status    String
+  cost      Float
+  createdAt DateTime @default(now())
+}
