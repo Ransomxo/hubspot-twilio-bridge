@@ -1,52 +1,35 @@
-import { Twilio } from 'twilio';
-import { prisma } from '../db';
+import { Twilio } from "twilio";
 
 export class TwilioService {
   private client: Twilio;
-  
+  private fromNumber: string;
+
   constructor(accountSid: string, authToken: string) {
     this.client = new Twilio(accountSid, authToken);
+    this.fromNumber = process.env.TWILIO_PHONE_NUMBER || "";
   }
 
   async sendSms(to: string, message: string, accountId: string) {
-    try {
-      const result = await this.client.messages.create({
-        body: message,
-        to,
-        from: process.env.TWILIO_PHONE_NUMBER
-      });
+    const result = await this.client.messages.create({
+      body: message,
+      from: this.fromNumber,
+      to: to
+    });
 
-      await prisma.smsBilling.create({
-        data: {
-          accountId,
-          messageId: result.sid,
-          status: result.status,
-          cost: 0.01 // Example cost per SMS
-        }
-      });
-
-      return result;
-    } catch (error) {
-      console.error('Error sending SMS:', error);
-      throw error;
-    }
+    return {
+      sid: result.sid,
+      status: result.status,
+      accountId
+    };
   }
 
   async handleIncomingSms(from: string, body: string, messageId: string, accountId: string) {
-    try {
-      await prisma.smsBilling.create({
-        data: {
-          accountId,
-          messageId,
-          status: 'received',
-          cost: 0.01 // Example cost per received SMS
-        }
-      });
-
-      return { from, body, messageId };
-    } catch (error) {
-      console.error('Error handling incoming SMS:', error);
-      throw error;
-    }
+    // Store the incoming message
+    return {
+      from,
+      body,
+      messageId,
+      accountId
+    };
   }
 }

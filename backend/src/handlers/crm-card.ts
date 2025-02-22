@@ -1,6 +1,6 @@
-import { Request, Response } from 'express';
-import { TwilioService } from '../services/twilio';
-import { prisma } from '../db';
+import { Request, Response } from "express";
+import { TwilioService } from "../services/twilio";
+import { prisma } from "../db";
 
 export async function handleCrmCardFetch(req: Request, res: Response) {
   try {
@@ -14,32 +14,31 @@ export async function handleCrmCardFetch(req: Request, res: Response) {
       return res.json({
         results: [{
           objectId,
-          title: 'SMS Communications',
-          status: 'ERROR',
-          message: 'Account not configured'
+          title: "SMS Communications",
+          status: "ERROR",
+          message: "Account not configured"
         }]
       });
     }
 
-    // Get the last SMS status for this object
     const lastSms = await prisma.smsBilling.findFirst({
       where: { accountId: account.id },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: "desc" }
     });
 
     return res.json({
       results: [{
         objectId,
-        title: 'SMS Communications',
+        title: "SMS Communications",
         properties: {
-          lastSmsStatus: lastSms?.status || 'No messages sent',
+          lastSmsStatus: lastSms?.status || "No messages sent",
           lastSmsTimestamp: lastSms?.createdAt || null
         }
       }]
     });
   } catch (error) {
-    console.error('CRM card fetch error:', error);
-    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+    console.error("CRM card fetch error:", error);
+    res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
   }
 }
 
@@ -52,7 +51,7 @@ export async function handleSendSms(req: Request, res: Response) {
     });
 
     if (!account?.twilioAccountSid || !account?.twilioAuthToken) {
-      throw new Error('Twilio credentials not configured');
+      throw new Error("Twilio credentials not configured");
     }
 
     const twilioService = new TwilioService(
@@ -62,12 +61,22 @@ export async function handleSendSms(req: Request, res: Response) {
 
     const result = await twilioService.sendSms(to, message, account.id);
 
+    // Track SMS billing
+    await prisma.smsBilling.create({
+      data: {
+        messageId: result.sid,
+        status: result.status,
+        cost: 0.01, // Default cost per SMS
+        accountId: account.id
+      }
+    });
+
     res.json({
       messageId: result.sid,
       status: result.status
     });
   } catch (error) {
-    console.error('Send SMS error:', error);
-    res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+    console.error("Send SMS error:", error);
+    res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
   }
 }

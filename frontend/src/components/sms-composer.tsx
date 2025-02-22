@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 interface SmsComposerProps {
   portalId: string;
@@ -7,17 +7,17 @@ interface SmsComposerProps {
 }
 
 export const SmsComposer: React.FC<SmsComposerProps> = ({ portalId, objectId, phoneNumber }) => {
-  const [message, setMessage] = useState('');
-  const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
   const handleSend = async () => {
     try {
-      setStatus('sending');
-      const response = await fetch('/api/send-sms', {
-        method: 'POST',
+      setStatus("sending");
+      const response = await fetch("/api/send-sms", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           portalId,
@@ -27,15 +27,15 @@ export const SmsComposer: React.FC<SmsComposerProps> = ({ portalId, objectId, ph
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send SMS');
+        throw new Error("Failed to send SMS");
       }
 
-      const result = await response.json();
-      setStatus('success');
-      setMessage('');
+      await response.json();
+      setStatus("success");
+      setMessage("");
     } catch (err) {
-      setStatus('error');
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setStatus("error");
+      setError(err instanceof Error ? err.message : "Unknown error");
     }
   };
 
@@ -67,22 +67,22 @@ export const SmsComposer: React.FC<SmsComposerProps> = ({ portalId, objectId, ph
         </span>
         <button
           onClick={handleSend}
-          disabled={status === 'sending' || !message.trim()}
+          disabled={status === "sending" || !message.trim()}
           className={`px-4 py-2 rounded ${
-            status === 'sending'
-              ? 'bg-gray-400'
-              : 'bg-blue-600 hover:bg-blue-700'
+            status === "sending"
+              ? "bg-gray-400"
+              : "bg-blue-600 hover:bg-blue-700"
           } text-white`}
         >
-          {status === 'sending' ? 'Sending...' : 'Send SMS'}
+          {status === "sending" ? "Sending..." : "Send SMS"}
         </button>
       </div>
-      {status === 'error' && (
+      {status === "error" && (
         <div className="mt-4 p-3 bg-red-100 text-red-700 rounded">
           {error}
         </div>
       )}
-      {status === 'success' && (
+      {status === "success" && (
         <div className="mt-4 p-3 bg-green-100 text-green-700 rounded">
           Message sent successfully!
         </div>

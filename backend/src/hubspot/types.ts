@@ -1,4 +1,4 @@
-export interface CrmCardDefinition {
+interface CrmCardDefinition {
   title: string;
   fetch: {
     objectTypes: string[];
@@ -20,3 +20,5 @@ export interface CrmCardDefinition {
     }[];
   };
 }
+
+export { CrmCardDefinition };
